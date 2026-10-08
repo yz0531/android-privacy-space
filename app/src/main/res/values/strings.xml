@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">隐私空间</string>
+    <string name="admin_description">管理隐私空间工作资料中的应用显示状态</string>
+</resources>
