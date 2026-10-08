@@ -16,7 +16,7 @@ import android.util.Log;
 /** Profile Owner entry point for the managed profile named "隐私空间". */
 public final class PrivacyAdminReceiver extends DeviceAdminReceiver {
     private static final String TAG = "PrivacyAdminReceiver";
-    private static final int POLICY_SCHEMA_VERSION = 5;
+    private static final int POLICY_SCHEMA_VERSION = 6;
     private static final int BACKGROUND_RETRY_COUNT = 6;
     private static final long BACKGROUND_RETRY_DELAY_MILLIS = 1_000L;
 
@@ -90,6 +90,7 @@ public final class PrivacyAdminReceiver extends DeviceAdminReceiver {
                     < POLICY_SCHEMA_VERSION) {
                 policyManager.clearCrossProfileIntentFilters(admin);
                 IntentFilter parentToManaged = new IntentFilter();
+                parentToManaged.addAction(AppContract.ACTION_OPEN_HOME);
                 parentToManaged.addAction(AppContract.ACTION_OPEN_MANAGER);
                 parentToManaged.addAction(AppContract.ACTION_INSTALL_IN_MANAGED);
                 parentToManaged.addAction(AppContract.ACTION_INSTALL_APK_IN_MANAGED);
@@ -119,6 +120,7 @@ public final class PrivacyAdminReceiver extends DeviceAdminReceiver {
                         UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES);
             }
 
+            setComponentState(context, PrivateHomeActivity.class, true);
             setComponentState(context, ManagerActivity.class, true);
             setComponentState(context, LauncherActivity.class, false);
             setComponentState(context, SecretCodeReceiver.class, false);

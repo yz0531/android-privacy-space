@@ -63,6 +63,10 @@ public final class ManagerActivity extends Activity {
                     Toast.LENGTH_LONG).show();
         }
 
+        if (openHomeIfRequested(getIntent())) {
+            return;
+        }
+
         renderContent();
         contentCreated = true;
     }
@@ -73,6 +77,9 @@ public final class ManagerActivity extends Activity {
         setIntent(intent);
         rememberLaunchAttempt(intent);
         readyAcknowledgementSent = false;
+        if (openHomeIfRequested(intent)) {
+            return;
+        }
         if (profilePolicyReady) {
             notifyParentManagerReady();
         }
@@ -92,8 +99,9 @@ public final class ManagerActivity extends Activity {
         String pendingPackage = AppSettings.getPendingRehide(this);
         if (pendingPackage != null) {
             boolean hidden = setPackageHidden(pendingPackage, true);
-            AppSettings.clearPendingRehide(this);
-            if (!hidden && isTrackedPackagePresent(pendingPackage)) {
+            if (hidden || !isTrackedPackagePresent(pendingPackage)) {
+                AppSettings.clearPendingRehide(this);
+            } else {
                 Toast.makeText(
                         this,
                         "未能重新隐藏 " + AppSettings.getLabel(this, pendingPackage)
@@ -103,6 +111,10 @@ public final class ManagerActivity extends Activity {
         }
         removeMissingTrackedPackages();
         ensureTrackedPackagesHidden();
+        String remainingPendingPackage = AppSettings.getPendingRehide(this);
+        if (remainingPendingPackage != null && isPolicyHidden(remainingPendingPackage)) {
+            AppSettings.clearPendingRehide(this);
+        }
         renderContent();
         if (profilePolicyReady) {
             notifyParentManagerReady();
@@ -131,6 +143,26 @@ public final class ManagerActivity extends Activity {
         launchProvisioningAttemptId = storedAttemptId;
         launchConnectionNonce = incomingNonce;
         managerConnectionRequestValid = true;
+    }
+
+    private boolean openHomeIfRequested(Intent intent) {
+        if (intent == null || !intent.getBooleanExtra(AppContract.EXTRA_OPEN_HOME, false)) {
+            return false;
+        }
+        intent.removeExtra(AppContract.EXTRA_OPEN_HOME);
+        if (!PrivacyAdminReceiver.configureManagedProfile(this)) {
+            Toast.makeText(this, "隐私空间入口初始化失败", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        try {
+            startActivity(new Intent(this, PrivateHomeActivity.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
+            finish();
+            return true;
+        } catch (RuntimeException error) {
+            Toast.makeText(this, "无法打开隐私空间首页", Toast.LENGTH_LONG).show();
+            return false;
+        }
     }
 
     private void notifyParentManagerReady() {

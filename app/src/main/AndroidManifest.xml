@@ -77,6 +77,20 @@
         </activity>
 
         <activity
+            android:name=".PrivateHomeActivity"
+            android:enabled="false"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:permission="com.example.privateentry.permission.OPEN_MANAGER"
+            android:theme="@style/Theme.PrivateHome">
+            <intent-filter>
+                <action android:name="com.example.privateentry.action.OPEN_HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name=".ManagedInstallActivity"
             android:excludeFromRecents="true"
             android:exported="true"

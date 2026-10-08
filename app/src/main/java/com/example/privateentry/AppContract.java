@@ -3,6 +3,8 @@ package com.example.privateentry;
 final class AppContract {
     static final String ACTION_OPEN_MANAGER =
             "com.example.privateentry.action.OPEN_MANAGER";
+    static final String ACTION_OPEN_HOME =
+            "com.example.privateentry.action.OPEN_HOME";
     static final String ACTION_INSTALL_IN_MANAGED =
             "com.example.privateentry.action.INSTALL_IN_MANAGED";
     static final String ACTION_INSTALL_IN_PARENT =
@@ -18,6 +20,7 @@ final class AppContract {
     static final String ACTION_PROFILE_READY =
             "com.example.privateentry.action.PROFILE_READY";
     static final String EXTRA_OPEN_MANAGER = "open_manager";
+    static final String EXTRA_OPEN_HOME = "open_home";
     static final String EXTRA_PROVISIONING_ATTEMPT_ID = "provisioning_attempt_id";
     static final String EXTRA_MANAGER_READY_ACK = "manager_ready_ack";
     static final String EXTRA_MANAGER_CONNECTION_NONCE = "manager_connection_nonce";

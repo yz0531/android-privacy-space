@@ -66,15 +66,16 @@ public final class MainActivity extends Activity {
         provisioningMonitorHandler = new Handler(Looper.getMainLooper());
         configurePersonalComponents();
         registerProfileLifecycleReceiver();
-        renderContent();
-        maybeOpenManager(getIntent());
+        if (!maybeOpenRequestedDestination(getIntent())) {
+            renderContent();
+        }
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        maybeOpenManager(intent);
+        maybeOpenRequestedDestination(intent);
     }
 
     @Override
@@ -214,7 +215,7 @@ public final class MainActivity extends Activity {
 
         if (profileAvailable) {
             Button openButton = button("打开隐私空间");
-            openButton.setOnClickListener(view -> openManagedProfile());
+            openButton.setOnClickListener(view -> openPrivateHome());
             addWithTopMargin(root, openButton, 10);
         } else if (provisioning.blockedActionLabel != null) {
             Button creatingButton = button(provisioning.blockedActionLabel);
@@ -871,11 +872,47 @@ public final class MainActivity extends Activity {
         }
     }
 
-    private void maybeOpenManager(Intent intent) {
-        if (intent != null && intent.getBooleanExtra(AppContract.EXTRA_OPEN_MANAGER, false)) {
-            intent.removeExtra(AppContract.EXTRA_OPEN_MANAGER);
-            openManagedProfile();
+    private boolean maybeOpenRequestedDestination(Intent intent) {
+        if (intent == null) {
+            return false;
         }
+        if (intent.getBooleanExtra(AppContract.EXTRA_OPEN_HOME, false)) {
+            intent.removeExtra(AppContract.EXTRA_OPEN_HOME);
+            if (openPrivateHome()) {
+                finish();
+                return true;
+            }
+        } else if (intent.getBooleanExtra(AppContract.EXTRA_OPEN_MANAGER, false)) {
+            intent.removeExtra(AppContract.EXTRA_OPEN_MANAGER);
+            if (openManagedProfile()) {
+                finish();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean openPrivateHome() {
+        Intent openHome = new Intent(AppContract.ACTION_OPEN_HOME)
+                .addCategory(Intent.CATEGORY_DEFAULT)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        if (CrossProfileNavigator.start(this, openHome)) {
+            return true;
+        }
+
+        Intent repairAndOpen = new Intent(AppContract.ACTION_OPEN_MANAGER)
+                .addCategory(Intent.CATEGORY_DEFAULT)
+                .putExtra(AppContract.EXTRA_OPEN_HOME, true)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        if (CrossProfileNavigator.start(this, repairAndOpen)) {
+            return true;
+        }
+
+        Toast.makeText(
+                this,
+                "无法打开隐私空间，请确认工作资料已开启",
+                Toast.LENGTH_LONG).show();
+        return false;
     }
 
     private boolean openManagedProfile() {
@@ -911,6 +948,7 @@ public final class MainActivity extends Activity {
     }
 
     private void configurePersonalComponents() {
+        setComponentState(PrivateHomeActivity.class, false);
         setComponentState(ManagerActivity.class, false);
         setComponentState(ManagedInstallActivity.class, false);
         setComponentState(ManagedApkInstallActivity.class, false);

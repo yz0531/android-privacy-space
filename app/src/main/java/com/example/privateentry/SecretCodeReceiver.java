@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 
-/** Opens the personal-profile bridge when the configured dialer secret code is entered. */
+/** Opens the private app grid when the configured dialer secret code is entered. */
 public final class SecretCodeReceiver extends BroadcastReceiver {
     private static final String ACTION_SECRET_CODE = "android.telephony.action.SECRET_CODE";
 
@@ -26,11 +26,32 @@ public final class SecretCodeReceiver extends BroadcastReceiver {
             return;
         }
 
-        Intent openApp = new Intent(context, MainActivity.class)
-                .putExtra(AppContract.EXTRA_OPEN_MANAGER, true)
+        Intent openHome = new Intent(AppContract.ACTION_OPEN_HOME)
+                .addCategory(Intent.CATEGORY_DEFAULT)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                         | Intent.FLAG_ACTIVITY_CLEAR_TOP
                         | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        context.startActivity(openApp);
+        if (CrossProfileNavigator.start(context, openHome)) {
+            return;
+        }
+
+        Intent repairAndOpen = new Intent(AppContract.ACTION_OPEN_MANAGER)
+                .addCategory(Intent.CATEGORY_DEFAULT)
+                .putExtra(AppContract.EXTRA_OPEN_HOME, true)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        if (CrossProfileNavigator.start(context, repairAndOpen)) {
+            return;
+        }
+
+        // If the profile is unavailable or still needs its post-update policy refresh, keep a
+        // recoverable entry in the personal profile instead of silently doing nothing.
+        Intent openSetup = new Intent(context, MainActivity.class)
+                .putExtra(AppContract.EXTRA_OPEN_HOME, true)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        context.startActivity(openSetup);
     }
 }

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.drawable.Drawable;
 import android.provider.Telephony;
 import android.telecom.TelecomManager;
 import android.view.inputmethod.InputMethodInfo;
@@ -122,6 +123,22 @@ final class TransferApps {
             return packageName;
         }
         return loaded.toString().trim();
+    }
+
+    static Drawable loadIcon(Context context, String packageName) {
+        PackageManager packageManager = context.getPackageManager();
+        ApplicationInfo info = getInstalledApplicationInfo(context, packageName);
+        if (info != null) {
+            try {
+                Drawable icon = info.loadIcon(packageManager);
+                if (icon != null) {
+                    return icon;
+                }
+            } catch (RuntimeException ignored) {
+                // Some customized systems hide package resources together with the app state.
+            }
+        }
+        return packageManager.getDefaultActivityIcon();
     }
 
     static boolean isValidPackageName(String value) {
